@@ -5,20 +5,25 @@ addons:
     packages:
       - libgmp-dev
 
-env:
-  - STACK_YAML=stack-ghc-7.8.4.yaml
-  - STACK_YAML=stack.yaml
+matrix:
+  include:
+    - env: GHCVER=7.8.4
+      addons: {apt: {packages: [ghc-7.8.4], sources: [hvr-ghc]}}
+    - env: GHCVER=7.10.2
+      addons: {apt: {packages: [ghc-7.10.2],sources: [hvr-ghc]}}
+
+before_install:
+ - export STACK_YAML=stack-ghc-$GHCVER.yaml
+ - export PATH=/opt/ghc/$GHCVER/bin:$PATH
+ # stack
+ - mkdir -p ~/.local/bin
+ - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+ - export PATH=~/.local/bin:$PATH
 
 install:
-  # stack
-  - mkdir -p ~/.local/bin
-  - travis_retry curl -L https://github.com/commercialhaskell/stack/releases/download/v0.1.4.0/stack-0.1.4.0-x86_64-linux.tar.gz | tar -xvzf -
-  - mv stack ~/.local/bin
-  - export PATH=~/.local/bin:$PATH
-  - stack --version
+ - stack build
 
 script:
-  - stack setup
   - stack build --test --ghc-options "-Werror"
 
 cache:
